@@ -1,7 +1,9 @@
-const CACHE_VERSION = '2026-07-17-2';
+const CACHE_VERSION = '2026-07-17-tools-4';
 const AIVEN_CACHE_PREFIX = 'aiven-public-';
 const CACHE_NAME = AIVEN_CACHE_PREFIX + CACHE_VERSION;
 const OFFLINE_URL = '/offline.html';
+const PUBLIC_TOOL_SHELL_HEADER = 'X-Aiven-Public-Tool-Shell';
+const PUBLIC_TOOL_PATH_PATTERN = /^\/herramientas\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const PRECACHE_ASSETS = Object.freeze([
     OFFLINE_URL,
@@ -49,6 +51,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data?.type === 'SKIP_WAITING') {
         self.skipWaiting();
+
+        return;
+    }
+
+    if (event.data?.type === 'CACHE_TOOL_SHELL') {
+        event.waitUntil(cachePublicToolShell(event.data));
     }
 });
 
@@ -135,12 +143,137 @@ async function networkFirstNavigation(request, preloadResponsePromise) {
         return networkResponse;
     }
 
+    const cachedToolShell = await matchPublicToolShell(request);
+
+    if (cachedToolShell) {
+        return cachedToolShell;
+    }
+
     const offlineResponse = await caches.match(OFFLINE_URL, {
         cacheName: CACHE_NAME,
         ignoreSearch: true,
     });
 
     return offlineResponse ?? networkResponse ?? Response.error();
+}
+
+async function matchPublicToolShell(request) {
+    const url = new URL(request.url);
+
+    if (!PUBLIC_TOOL_PATH_PATTERN.test(url.pathname)) {
+        return undefined;
+    }
+
+    const cache = await caches.open(CACHE_NAME);
+
+    return cache.match(url.pathname, { ignoreSearch: true });
+}
+
+async function cachePublicToolShell(message) {
+    const canonicalUrl = parseSameOriginUrl(message.canonicalUrl);
+    const shellUrl = parseSameOriginUrl(message.shellUrl);
+
+    if (
+        !canonicalUrl ||
+        !shellUrl ||
+        !PUBLIC_TOOL_PATH_PATTERN.test(canonicalUrl.pathname) ||
+        shellUrl.pathname !== canonicalUrl.pathname + '/sin-conexion' ||
+        canonicalUrl.search !== '' ||
+        shellUrl.search !== ''
+    ) {
+        return;
+    }
+
+    const shellResponse = await fetch(shellUrl.pathname, {
+        cache: 'reload',
+        credentials: 'omit',
+        headers: { Accept: 'text/html' },
+        redirect: 'follow',
+    });
+
+    if (!isCacheablePublicToolShell(shellResponse)) {
+        return;
+    }
+
+    const shellHtml = await shellResponse.clone().text();
+    const embeddedAssets = extractPublicAssetPaths(shellHtml);
+    const reportedAssets = Array.isArray(message.assetUrls)
+        ? message.assetUrls.slice(0, 50)
+        : [];
+    const assetPaths = new Set([...embeddedAssets, ...reportedAssets]);
+    const cache = await caches.open(CACHE_NAME);
+
+    await cache.put(canonicalUrl.pathname, shellResponse);
+    await Promise.all(
+        [...assetPaths].map((assetPath) => cachePublicAssetPath(assetPath)),
+    );
+}
+
+function parseSameOriginUrl(value) {
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+
+    let url;
+
+    try {
+        url = new URL(value, self.location.origin);
+    } catch {
+        return undefined;
+    }
+
+    return url.origin === self.location.origin ? url : undefined;
+}
+
+function isCacheablePublicToolShell(response) {
+    const cacheControl = response.headers.get('Cache-Control') ?? '';
+    const contentType = response.headers.get('Content-Type') ?? '';
+
+    return (
+        response.ok &&
+        response.headers.get(PUBLIC_TOOL_SHELL_HEADER) === '1' &&
+        contentType.includes('text/html') &&
+        !response.headers.has('Set-Cookie') &&
+        !response.headers.has('X-Inertia') &&
+        !/(?:private|no-store)/i.test(cacheControl)
+    );
+}
+
+function extractPublicAssetPaths(html) {
+    const assetPaths = [];
+    const attributePattern = /(?:src|href)=["'](\/build\/assets\/[^"']+)["']/g;
+    let match;
+
+    while ((match = attributePattern.exec(html)) !== null) {
+        assetPaths.push(match[1]);
+    }
+
+    return assetPaths;
+}
+
+async function cachePublicAssetPath(value) {
+    const url = parseSameOriginUrl(value);
+
+    if (
+        !url ||
+        url.search !== '' ||
+        !SAFE_PUBLIC_ASSET_PREFIXES.some((pathPrefix) =>
+            url.pathname.startsWith(pathPrefix),
+        )
+    ) {
+        return;
+    }
+
+    try {
+        await cacheFirstPublicAsset(
+            new Request(url.href, {
+                cache: 'no-cache',
+                credentials: 'omit',
+                method: 'GET',
+                mode: 'same-origin',
+            }),
+        );
+    } catch {}
 }
 
 function isNeverCacheRequest(request, url) {

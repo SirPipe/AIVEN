@@ -49,10 +49,10 @@ export function AppSidebar() {
             <SidebarFooter>
                 <div className="mx-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/50 px-3 py-2.5 group-data-[collapsible=icon]:hidden">
                     <p className="text-xs font-semibold text-sidebar-foreground">
-                        Base AIVEN activa
+                        Herramientas AIVEN activas
                     </p>
                     <p className="mt-0.5 text-[0.68rem] leading-relaxed text-sidebar-foreground/60">
-                        Los nuevos módulos llegarán por etapas.
+                        Resuelve tareas desde cualquier dispositivo.
                     </p>
                 </div>
                 {auth.user ? (

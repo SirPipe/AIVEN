@@ -15,7 +15,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { community, explore, games, map, simulators, tools } from '@/routes';
+import { community, explore, games, map, simulators } from '@/routes';
+import { index as tools } from '@/routes/tools';
 
 const modules = [
     {
@@ -26,6 +27,7 @@ const modules = [
         icon: Wrench,
         color: 'text-cyan-600 dark:text-cyan-400',
         background: 'bg-cyan-500/10',
+        available: true,
     },
     {
         title: 'Simuladores',
@@ -35,6 +37,7 @@ const modules = [
         icon: Boxes,
         color: 'text-violet-600 dark:text-violet-400',
         background: 'bg-violet-500/10',
+        available: false,
     },
     {
         title: 'Juegos',
@@ -44,6 +47,7 @@ const modules = [
         icon: Gamepad2,
         color: 'text-amber-600 dark:text-amber-400',
         background: 'bg-amber-500/10',
+        available: false,
     },
     {
         title: 'Comunidad',
@@ -53,6 +57,7 @@ const modules = [
         icon: MessagesSquare,
         color: 'text-emerald-600 dark:text-emerald-400',
         background: 'bg-emerald-500/10',
+        available: false,
     },
     {
         title: 'Mapa tecnológico',
@@ -62,6 +67,7 @@ const modules = [
         icon: MapPinned,
         color: 'text-rose-600 dark:text-rose-400',
         background: 'bg-rose-500/10',
+        available: false,
     },
 ];
 
@@ -91,7 +97,7 @@ export default function Explore() {
                 <section aria-labelledby="modules-title" className="space-y-4">
                     <div>
                         <p className="text-xs font-medium tracking-[0.16em] text-primary uppercase">
-                            Próximas experiencias
+                            Experiencias AIVEN
                         </p>
                         <h2
                             id="modules-title"
@@ -116,8 +122,16 @@ export default function Explore() {
                                             >
                                                 <module.icon className="size-5" />
                                             </span>
-                                            <Badge variant="outline">
-                                                En preparación
+                                            <Badge
+                                                variant={
+                                                    module.available
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                }
+                                            >
+                                                {module.available
+                                                    ? 'Disponible'
+                                                    : 'En preparación'}
                                             </Badge>
                                         </div>
                                         <div className="space-y-2">
@@ -129,7 +143,9 @@ export default function Explore() {
                                             </CardDescription>
                                         </div>
                                         <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-                                            Ver adelanto
+                                            {module.available
+                                                ? 'Abrir módulo'
+                                                : 'Ver adelanto'}
                                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" />
                                         </span>
                                     </CardHeader>

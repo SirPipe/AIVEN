@@ -8,6 +8,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -32,7 +34,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'username', 'email', 'password', 'interests', 'terms_accepted_at'])]
+#[Fillable(['name', 'username', 'email', 'password', 'interests', 'terms_accepted_at', 'tool_history_enabled'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
@@ -46,11 +48,36 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
      */
     protected $attributes = [
         'role' => UserRole::User->value,
+        'tool_history_enabled' => true,
     ];
 
     public function isAdministrator(): bool
     {
         return $this->role === UserRole::Administrator;
+    }
+
+    /**
+     * @return BelongsToMany<Tool, $this>
+     */
+    public function favoriteTools(): BelongsToMany
+    {
+        return $this->belongsToMany(Tool::class, 'tool_favorites')->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<ToolHistory, $this>
+     */
+    public function toolHistories(): HasMany
+    {
+        return $this->hasMany(ToolHistory::class);
+    }
+
+    /**
+     * @return HasMany<ToolErrorReport, $this>
+     */
+    public function toolErrorReports(): HasMany
+    {
+        return $this->hasMany(ToolErrorReport::class);
     }
 
     /**
@@ -66,6 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'role' => UserRole::class,
             'terms_accepted_at' => 'datetime',
+            'tool_history_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
         ];
     }

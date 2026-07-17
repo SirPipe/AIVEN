@@ -23,7 +23,7 @@ export function PwaStatus() {
     if (!isOnline) {
         notice = {
             description:
-                'Algunas funciones no están disponibles. Tus datos privados no se guardan en el caché público.',
+                'Las herramientas que abriste antes pueden seguir funcionando. Favoritos e historial esperan la conexión y tus datos privados no entran al caché público.',
             kind: 'offline',
             title: 'Sin conexión',
         };

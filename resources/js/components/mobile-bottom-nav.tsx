@@ -12,9 +12,9 @@ import {
     login,
     map,
     simulators,
-    tools,
 } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
+import { index as tools } from '@/routes/tools';
 import type { NavItem } from '@/types';
 
 const primaryMobileNavItems: NavItem[] = [

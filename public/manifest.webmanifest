@@ -13,6 +13,86 @@
     "background_color": "#0b1020",
     "theme_color": "#0b1020",
     "categories": ["education", "productivity", "social", "utilities"],
+    "shortcuts": [
+        {
+            "name": "Generar código QR",
+            "short_name": "Código QR",
+            "description": "Crea y descarga un código QR desde tu dispositivo.",
+            "url": "/herramientas/generador-qr",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Generar contraseña",
+            "short_name": "Contraseñas",
+            "description": "Crea contraseñas seguras y privadas sin conexión.",
+            "url": "/herramientas/generador-contrasenas",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Comprimir imagen",
+            "short_name": "Comprimir",
+            "description": "Reduce imágenes localmente sin subirlas a un servidor.",
+            "url": "/herramientas/comprimir-imagen",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Calcular subred IPv4",
+            "short_name": "Subredes",
+            "description": "Calcula red, broadcast y hosts de una subred IPv4.",
+            "url": "/herramientas/calculadora-subredes",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Convertir imagen",
+            "short_name": "Convertir",
+            "description": "Convierte JPG, PNG y WebP directamente en tu dispositivo.",
+            "url": "/herramientas/convertir-imagen",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Calcular consumo de PC",
+            "short_name": "Consumo PC",
+            "description": "Estima potencia, fuente recomendada y costo eléctrico.",
+            "url": "/herramientas/consumo-pc",
+            "icons": [
+                {
+                    "src": "/icons/aiven-icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ],
     "icons": [
         {
             "src": "/icons/aiven-icon.svg",

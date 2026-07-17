@@ -34,6 +34,7 @@ class UserFactory extends Factory
             'role' => UserRole::User,
             'interests' => null,
             'terms_accepted_at' => now(),
+            'tool_history_enabled' => true,
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

@@ -9,7 +9,6 @@ import {
     MapPinned,
     MessagesSquare,
     Sparkles,
-    Wrench,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +22,7 @@ import {
 } from '@/components/ui/card';
 import { dashboard, explore, register } from '@/routes';
 
-type ModuleKey = 'tools' | 'simulators' | 'games' | 'community' | 'map';
+type ModuleKey = 'simulators' | 'games' | 'community' | 'map';
 
 type ModulePreview = {
     key: ModuleKey;
@@ -38,7 +37,6 @@ type ModulePreview = {
 };
 
 const moduleIcons: Record<ModuleKey, LucideIcon> = {
-    tools: Wrench,
     simulators: Boxes,
     games: Gamepad2,
     community: MessagesSquare,
@@ -49,11 +47,6 @@ const moduleStyles: Record<
     ModuleKey,
     { icon: string; glow: string; surface: string }
 > = {
-    tools: {
-        icon: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
-        glow: 'bg-cyan-400/20',
-        surface: 'border-cyan-500/20 bg-cyan-500/[0.035]',
-    },
     simulators: {
         icon: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
         glow: 'bg-violet-500/20',

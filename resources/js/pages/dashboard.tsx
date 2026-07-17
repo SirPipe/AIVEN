@@ -13,6 +13,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { ToolIcon } from '@/components/tools/tool-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,8 +30,9 @@ import {
     games,
     map,
     simulators,
-    tools,
 } from '@/routes';
+import toolRoutes, { index as tools } from '@/routes/tools';
+import type { ToolHistoryEntry, ToolSummary } from '@/types/tools';
 
 const quickAccessItems = [
     {
@@ -67,7 +69,15 @@ const quickAccessItems = [
     },
 ];
 
-export default function Dashboard() {
+type DashboardProps = {
+    favoriteTools: ToolSummary[];
+    recentToolHistory: ToolHistoryEntry[];
+};
+
+export default function Dashboard({
+    favoriteTools,
+    recentToolHistory,
+}: DashboardProps) {
     const { auth } = usePage().props;
 
     if (!auth.user) {
@@ -227,23 +237,66 @@ export default function Dashboard() {
                             <Badge variant="outline">Nuevo</Badge>
                         </CardHeader>
                         <CardContent className="px-5 sm:px-6">
-                            <EmptyState
-                                icon={Compass}
-                                title="Aún no tienes actividad reciente"
-                                description="Explora un módulo y AIVEN recordará tu avance para que continúes desde cualquier dispositivo."
-                                action={
+                            {recentToolHistory.length > 0 ? (
+                                <div className="grid gap-2">
+                                    {recentToolHistory.map((entry) => (
+                                        <Button
+                                            key={entry.id}
+                                            asChild
+                                            variant="ghost"
+                                            className="h-auto justify-start rounded-xl px-3 py-3"
+                                        >
+                                            <Link
+                                                href={toolRoutes.show(
+                                                    entry.tool,
+                                                )}
+                                            >
+                                                <ToolIcon
+                                                    icon={entry.tool.icon}
+                                                    className="size-4 shrink-0 text-primary"
+                                                />
+                                                <span className="min-w-0 flex-1 text-left">
+                                                    <span className="block truncate font-medium">
+                                                        {entry.tool.name}
+                                                    </span>
+                                                    <span className="block truncate text-xs text-muted-foreground">
+                                                        {entry.summary}
+                                                    </span>
+                                                </span>
+                                                <ArrowRight className="size-4 shrink-0" />
+                                            </Link>
+                                        </Button>
+                                    ))}
                                     <Button
                                         asChild
                                         size="sm"
                                         variant="outline"
-                                        className="rounded-full"
+                                        className="mt-1 w-fit rounded-full"
                                     >
-                                        <Link href={explore()}>
-                                            Elegir una experiencia
+                                        <Link href={toolRoutes.history.index()}>
+                                            Ver historial
                                         </Link>
                                     </Button>
-                                }
-                            />
+                                </div>
+                            ) : (
+                                <EmptyState
+                                    icon={Compass}
+                                    title="Aún no tienes actividad reciente"
+                                    description="Usa una herramienta y AIVEN guardará sólo la configuración no sensible para que continúes desde cualquier dispositivo."
+                                    action={
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="outline"
+                                            className="rounded-full"
+                                        >
+                                            <Link href={tools()}>
+                                                Elegir una herramienta
+                                            </Link>
+                                        </Button>
+                                    }
+                                />
+                            )}
                         </CardContent>
                     </Card>
 
@@ -259,10 +312,42 @@ export default function Dashboard() {
                                     instante.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="px-5">
-                                <Button asChild variant="outline" size="sm">
-                                    <Link href={tools()}>
-                                        Descubrir herramientas
+                            <CardContent className="grid gap-2 px-5">
+                                {favoriteTools.map((tool) => (
+                                    <Button
+                                        key={tool.id}
+                                        asChild
+                                        variant="ghost"
+                                        size="sm"
+                                        className="justify-start"
+                                    >
+                                        <Link href={toolRoutes.show(tool)}>
+                                            <ToolIcon
+                                                icon={tool.icon}
+                                                className="size-4 text-primary"
+                                            />
+                                            <span className="truncate">
+                                                {tool.name}
+                                            </span>
+                                        </Link>
+                                    </Button>
+                                ))}
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-1 w-fit"
+                                >
+                                    <Link
+                                        href={
+                                            favoriteTools.length > 0
+                                                ? toolRoutes.favorites()
+                                                : tools()
+                                        }
+                                    >
+                                        {favoriteTools.length > 0
+                                            ? 'Ver todas'
+                                            : 'Descubrir herramientas'}
                                     </Link>
                                 </Button>
                             </CardContent>

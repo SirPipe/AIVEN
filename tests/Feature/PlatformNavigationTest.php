@@ -8,7 +8,7 @@ test('guests can explore the public platform areas', function (string $routeName
         ->assertInertia(fn (Assert $page) => $page->component($component));
 })->with([
     'explore' => ['explore', 'explore'],
-    'tools' => ['tools', 'modules/show'],
+    'tools' => ['tools.index', 'tools/index'],
     'simulators' => ['simulators', 'modules/show'],
     'games' => ['games', 'modules/show'],
     'community' => ['community', 'modules/show'],
@@ -27,7 +27,6 @@ test('module previews expose only informational content', function (string $rout
             ->has('module.previews', 4)
         );
 })->with([
-    'tools' => ['tools', 'tools'],
     'simulators' => ['simulators', 'simulators'],
     'games' => ['games', 'games'],
     'community' => ['community', 'community'],

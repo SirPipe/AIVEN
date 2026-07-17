@@ -4,9 +4,15 @@ import {
     Compass,
     Gamepad2,
     House,
+    ImageDown,
+    Images,
+    KeyRound,
     MapPinned,
     MessagesSquare,
+    Network,
+    QrCode,
     Wrench,
+    Zap,
 } from 'lucide-react';
 import {
     community,
@@ -15,8 +21,8 @@ import {
     games,
     map,
     simulators,
-    tools,
 } from '@/routes';
+import toolRoutes, { index as tools } from '@/routes/tools';
 import type { NavItem } from '@/types';
 
 export const platformNavItems: NavItem[] = [
@@ -59,6 +65,36 @@ export const platformNavItems: NavItem[] = [
 
 export const searchableNavItems: NavItem[] = [
     ...platformNavItems,
+    {
+        title: 'Generador QR',
+        href: toolRoutes.show('generador-qr'),
+        icon: QrCode,
+    },
+    {
+        title: 'Generador de contraseñas',
+        href: toolRoutes.show('generador-contrasenas'),
+        icon: KeyRound,
+    },
+    {
+        title: 'Comprimir imagen',
+        href: toolRoutes.show('comprimir-imagen'),
+        icon: ImageDown,
+    },
+    {
+        title: 'Convertir imagen',
+        href: toolRoutes.show('convertir-imagen'),
+        icon: Images,
+    },
+    {
+        title: 'Consumo de PC',
+        href: toolRoutes.show('consumo-pc'),
+        icon: Zap,
+    },
+    {
+        title: 'Calculadora de subredes',
+        href: toolRoutes.show('calculadora-subredes'),
+        icon: Network,
+    },
     {
         title: 'Publicaciones',
         href: community({ query: { section: 'publicaciones' } }),

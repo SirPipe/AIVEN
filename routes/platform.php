@@ -1,40 +1,46 @@
 <?php
 
+use App\Http\Controllers\ToolController;
+use App\Http\Controllers\ToolErrorReportController;
+use App\Http\Controllers\ToolFavoriteController;
+use App\Http\Controllers\ToolHistoryController;
+use App\Http\Middleware\PublicToolShell;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('explorar', 'explore')->name('explore');
 
-Route::inertia('herramientas', 'modules/show', [
-    'module' => [
-        'key' => 'tools',
-        'eyebrow' => 'Utilidades prácticas',
-        'title' => 'Herramientas que resuelven contigo',
-        'description' => 'Una colección de utilidades claras y rápidas para calcular, convertir, diagnosticar y tomar mejores decisiones tecnológicas.',
-        'highlights' => [
-            'Resultados claros y fáciles de guardar.',
-            'Favoritos sincronizados entre dispositivos.',
-            'Diseño accesible para móvil y computadora.',
-        ],
-        'previews' => [
-            [
-                'title' => 'Conversores inteligentes',
-                'description' => 'Transforma unidades, formatos y valores con explicaciones sencillas.',
-            ],
-            [
-                'title' => 'Diagnóstico guiado',
-                'description' => 'Sigue pasos concretos para identificar problemas comunes.',
-            ],
-            [
-                'title' => 'Calculadoras técnicas',
-                'description' => 'Obtén resultados confiables sin perder de vista el procedimiento.',
-            ],
-            [
-                'title' => 'Historial personal',
-                'description' => 'Retoma cálculos recientes desde cualquier dispositivo.',
-            ],
-        ],
-    ],
-])->name('tools');
+Route::prefix('herramientas')->name('tools.')->group(function () {
+    Route::get('/', [ToolController::class, 'index'])->name('index');
+    Route::get('categoria/{toolCategory:slug}', [ToolController::class, 'category'])->name('category');
+
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('favoritas', [ToolController::class, 'favorites'])->name('favorites');
+        Route::get('historial', [ToolHistoryController::class, 'index'])->name('history.index');
+        Route::patch('historial/preferencia', [ToolHistoryController::class, 'preference'])
+            ->name('history.preference');
+        Route::delete('historial', [ToolHistoryController::class, 'clear'])->name('history.clear');
+        Route::delete('historial/{toolHistory}', [ToolHistoryController::class, 'destroy'])
+            ->name('history.destroy');
+
+        Route::post('{tool:slug}/favorito', [ToolFavoriteController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('favorite.store');
+        Route::delete('{tool:slug}/favorito', [ToolFavoriteController::class, 'destroy'])
+            ->middleware('throttle:60,1')
+            ->name('favorite.destroy');
+        Route::post('{tool:slug}/historial', [ToolHistoryController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('history.store');
+    });
+
+    Route::get('{tool:slug}/sin-conexion', [ToolController::class, 'offlineShell'])
+        ->middleware(PublicToolShell::class)
+        ->name('offline-shell');
+    Route::post('{tool:slug}/errores', ToolErrorReportController::class)
+        ->middleware('throttle:10,1')
+        ->name('errors.store');
+    Route::get('{tool:slug}', [ToolController::class, 'show'])->name('show');
+});
 
 Route::inertia('simuladores', 'modules/show', [
     'module' => [

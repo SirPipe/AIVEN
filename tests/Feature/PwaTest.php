@@ -37,6 +37,15 @@ test('web app manifest defines the installable AIVEN experience', function () {
         ->and($manifest['background_color'])->toBe('#0b1020')
         ->and($manifest['theme_color'])->toBe('#0b1020');
 
+    expect(array_column($manifest['shortcuts'], 'url'))->toContain(
+        '/herramientas/generador-qr',
+        '/herramientas/generador-contrasenas',
+        '/herramientas/comprimir-imagen',
+        '/herramientas/convertir-imagen',
+        '/herramientas/consumo-pc',
+        '/herramientas/calculadora-subredes',
+    );
+
     $iconsBySource = [];
 
     foreach ($manifest['icons'] as $icon) {
@@ -81,12 +90,17 @@ test('offline fallback is public and privacy conscious', function () {
         ->and($offlinePage)->toContain('href="/"');
 });
 
-test('service worker never persists navigations or private requests', function () {
+test('service worker only persists explicit public tool shells', function () {
     $serviceWorker = File::get(public_path('service-worker.js'));
     $navigationStrategy = Str::between(
         $serviceWorker,
         'async function networkFirstNavigation',
-        'function isNeverCacheRequest',
+        'async function matchPublicToolShell',
+    );
+    $toolShellStrategy = Str::between(
+        $serviceWorker,
+        'async function cachePublicToolShell',
+        'function parseSameOriginUrl',
     );
     $precacheDeclaration = Str::between(
         $serviceWorker,
@@ -101,10 +115,23 @@ test('service worker never persists navigations or private requests', function (
         ->and($serviceWorker)->toContain("credentials: 'omit'")
         ->and($serviceWorker)->toContain("response.headers.has('Set-Cookie')")
         ->and($serviceWorker)->toContain('private|no-store')
+        ->and($serviceWorker)->toContain('CACHE_TOOL_SHELL')
+        ->and($serviceWorker)->toContain('PUBLIC_TOOL_SHELL_HEADER')
+        ->and($serviceWorker)->toContain('matchPublicToolShell')
         ->and($serviceWorker)->toContain('if (networkResponse)')
         ->and($serviceWorker)->not->toContain('networkResponse.status < 500')
         ->and($navigationStrategy)->not->toContain('cache.put')
         ->and($navigationStrategy)->not->toContain('caches.open')
+        ->and($toolShellStrategy)->toContain("credentials: 'omit'")
+        ->and($toolShellStrategy)->toContain(
+            "shellUrl.pathname !== canonicalUrl.pathname + '/sin-conexion'",
+        )
+        ->and($toolShellStrategy)->toContain(
+            'isCacheablePublicToolShell(shellResponse)',
+        )
+        ->and($toolShellStrategy)->toContain(
+            'cache.put(canonicalUrl.pathname, shellResponse)',
+        )
         ->and($precacheDeclaration)->not->toContain("'/login'")
         ->and($precacheDeclaration)->not->toContain("'/dashboard'")
         ->and($precacheDeclaration)->not->toContain("'/settings'");
