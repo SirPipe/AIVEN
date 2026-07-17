@@ -1,7 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -13,38 +11,30 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { platformNavItems } from '@/lib/platform-navigation';
+import { dashboard, home, login, register } from '@/routes';
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const closeMobileNavigation = useMobileNavigation();
+    const navigationItems = platformNavItems.map((item) =>
+        item.title === 'Inicio'
+            ? { ...item, href: auth.user ? dashboard() : home() }
+            : item,
+    );
+
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="inset" className="border-r-0">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link
+                                href={auth.user ? dashboard() : home()}
+                                prefetch
+                                onClick={closeMobileNavigation}
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -53,12 +43,44 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navigationItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
+                <div className="mx-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/50 px-3 py-2.5 group-data-[collapsible=icon]:hidden">
+                    <p className="text-xs font-semibold text-sidebar-foreground">
+                        Base AIVEN activa
+                    </p>
+                    <p className="mt-0.5 text-[0.68rem] leading-relaxed text-sidebar-foreground/60">
+                        Los nuevos módulos llegarán por etapas.
+                    </p>
+                </div>
+                {auth.user ? (
+                    <NavUser />
+                ) : (
+                    <SidebarMenu className="group-data-[collapsible=icon]:hidden">
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <Link
+                                    href={login()}
+                                    onClick={closeMobileNavigation}
+                                >
+                                    Iniciar sesión
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive>
+                                <Link
+                                    href={register()}
+                                    onClick={closeMobileNavigation}
+                                >
+                                    Crear cuenta
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                )}
             </SidebarFooter>
         </Sidebar>
     );

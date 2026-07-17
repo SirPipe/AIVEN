@@ -45,10 +45,11 @@ test('password can be reset with valid token', function () {
     Notification::fake();
 
     $user = User::factory()->create();
+    $rememberToken = $user->remember_token;
 
     $this->post(route('password.email'), ['email' => $user->email]);
 
-    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($rememberToken, $user) {
         $response = $this->post(route('password.update'), [
             'token' => $notification->token,
             'email' => $user->email,
@@ -59,6 +60,8 @@ test('password can be reset with valid token', function () {
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('login'));
+
+        expect($user->refresh()->remember_token)->not->toBe($rememberToken);
 
         return true;
     });
@@ -75,4 +78,27 @@ test('password cannot be reset with invalid token', function () {
     ]);
 
     $response->assertSessionHasErrors('email');
+});
+
+test('expired password reset links show a clear error', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->post(route('password.email'), ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        $this->travel(((int) config('auth.passwords.users.expire')) + 1)->minutes();
+
+        $this->post(route('password.update'), [
+            'token' => $notification->token,
+            'email' => $user->email,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertSessionHasErrors([
+            'email' => __('passwords.token'),
+        ]);
+
+        return true;
+    });
 });

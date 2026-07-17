@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -30,8 +32,35 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureActions();
+        $this->configureAuthentication();
         $this->configureViews();
         $this->configureRateLimiting();
+    }
+
+    /**
+     * Configure how users are authenticated.
+     */
+    private function configureAuthentication(): void
+    {
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $login = Str::lower($request->string('login')->trim()->toString());
+            $password = $request->string('password')->toString();
+
+            $user = User::query()
+                ->where('email', $login)
+                ->orWhere('username', $login)
+                ->first();
+
+            if (! $user || ! Hash::check($password, $user->password)) {
+                return null;
+            }
+
+            if (Hash::needsRehash($user->password)) {
+                $user->forceFill(['password' => $password])->save();
+            }
+
+            return $user;
+        });
     }
 
     /**
@@ -68,6 +97,7 @@ class FortifyServiceProvider extends ServiceProvider
         ]));
 
         Fortify::registerView(fn () => Inertia::render('auth/register', [
+            'interestOptions' => CreateNewUser::INTERESTS,
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]));
 

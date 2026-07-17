@@ -43,17 +43,18 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         const urlToCompare = currentUrl ?? currentUrlPath;
         const urlString = toUrl(urlToCheck);
 
-        const comparePath = (path: string): boolean =>
-            startsWith ? urlToCompare.startsWith(path) : path === urlToCompare;
-
-        if (!urlString.startsWith('http')) {
-            return comparePath(urlString);
-        }
-
         try {
-            const absoluteUrl = new URL(urlString);
+            const origin =
+                typeof window !== 'undefined'
+                    ? window.location.origin
+                    : 'http://localhost';
+            const path = new URL(urlString, origin).pathname;
+            const currentPath = new URL(urlToCompare, origin).pathname;
 
-            return comparePath(absoluteUrl.pathname);
+            return startsWith
+                ? currentPath === path ||
+                      (path !== '/' && currentPath.startsWith(`${path}/`))
+                : currentPath === path;
         } catch {
             return false;
         }

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\UserRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -26,9 +27,13 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'username' => Str::lower(fake()->unique()->bothify('user_????_####')),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => UserRole::User,
+            'interests' => null,
+            'terms_accepted_at' => now(),
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
@@ -55,6 +60,26 @@ class UserFactory extends Factory
             'two_factor_secret' => encrypt('secret'),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a moderator.
+     */
+    public function moderator(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Moderator,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an administrator.
+     */
+    public function administrator(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Administrator,
         ]);
     }
 }

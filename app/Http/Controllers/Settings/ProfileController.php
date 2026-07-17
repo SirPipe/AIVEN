@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,7 +31,11 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $request->user()->fill($request->safe()->only([
+            'name',
+            'username',
+            'email',
+        ]));
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -38,7 +43,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Perfil actualizado.')]);
 
         return to_route('profile.edit');
     }
@@ -52,11 +57,20 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        DB::transaction(function () use ($user): void {
+            DB::table((string) config('session.table', 'sessions'))
+                ->where('user_id', $user->getAuthIdentifier())
+                ->delete();
+            DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->delete();
+
+            $user->delete();
+        });
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return to_route('home');
     }
 }

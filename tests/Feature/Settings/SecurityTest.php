@@ -69,6 +69,7 @@ test('security page renders without two factor when feature is disabled', functi
 
 test('password can be updated', function () {
     $user = User::factory()->create();
+    $rememberToken = $user->remember_token;
 
     $response = $this
         ->actingAs($user)
@@ -83,7 +84,8 @@ test('password can be updated', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('security.edit'));
 
-    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue()
+        ->and($user->remember_token)->not->toBe($rememberToken);
 });
 
 test('correct password must be provided to update password', function () {
